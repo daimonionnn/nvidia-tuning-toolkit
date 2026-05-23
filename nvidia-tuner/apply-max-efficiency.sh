@@ -8,9 +8,9 @@ if ! command -v nvidia-tuner &>/dev/null; then
 fi
 
 PROFILE_NAME="max-efficiency"
-PROFILE_CORE_OFFSET=-150
-PROFILE_MEMORY_OFFSET=0
-PROFILE_POWER_LIMIT=450
+PROFILE_CORE_OFFSET=-125
+PROFILE_MEMORY_OFFSET=3000
+PROFILE_POWER_LIMIT=400
 
 echo "Applying nvidia-tuner ${PROFILE_NAME} profile: core ${PROFILE_CORE_OFFSET}, memory ${PROFILE_MEMORY_OFFSET}, power ${PROFILE_POWER_LIMIT}W"
 nvidia-tuner \

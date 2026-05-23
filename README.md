@@ -1,5 +1,5 @@
-# NVIDIA RTX Overclock Toolkit for Linux
-Personal scripts for overclocking my nVidia RTX 5090 - MSI Vanguard
+# NVIDIA RTX Tuning Toolkit for Linux
+Scripts for tuning and overclocking nVidia RTX GPUs (customized and tested on MSI RTX 5090 Vanguard)
 
 GPU detected: **RTX 5090** · Driver **580.126.09** · GDDR7 32 GB  
 Stock memory clock: **14001 MHz** (28 Gbps)
@@ -141,7 +141,7 @@ After=graphical.target
 [Service]
 Type=oneshot
 Environment=DISPLAY=:0
-ExecStart=/home/matt/development/Nvidia-Toolkit/nvidia-settings/oc-memory.sh 2500
+ExecStart=/home/matt/development/Nvidia-Tuning-Toolkit/nvidia-settings/oc-memory.sh 2500
 RemainAfterExit=yes
 
 [Install]
@@ -235,7 +235,7 @@ then `+500`) and re-test.
 ## Files
 
 ```
-Nvidia-Toolkit/
+Nvidia-Tuning-Toolkit/
 ├── monitor.sh                  # Live GPU stats (1s refresh)
 ├── nvidia-settings/
 │   ├── install.sh              # One-shot setup (Coolbits + permissions)
