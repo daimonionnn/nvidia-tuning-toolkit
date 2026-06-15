@@ -29,7 +29,7 @@ echo "[1/4] Scripts marked executable (nvidia-settings + nvidia-tuner)."
 if [[ -f "$COOLBITS_DEST" ]]; then
     echo "[2/4] Coolbits config already exists at $COOLBITS_DEST — skipping."
 else
-    sudo cp "$COOLBITS_SRC" "$COOLBITS_DEST"
+    sudo install -Dm644 "$COOLBITS_SRC" "$COOLBITS_DEST"
     echo "[2/4] Coolbits config installed to $COOLBITS_DEST"
 fi
 

@@ -35,13 +35,13 @@ bash nvidia-settings/install.sh
 nvidia-tuner --core-clock-offset -125 --memory-clock-offset 2500 --power-limit 500
 nvidia-tuner --memory-clock-offset 3000 --power-limit 500
 
-# Or use the bundled helper preset script
-./nvidia-tuner/apply-default.sh
+# Or reset clocks to stock and unlock max power with the bundled helper
+./nvidia-tuner/apply-default.sh        # core 0, mem 0, PL 600W
 
-# Undervolt profile helpers (recommended starting ladder)
-./nvidia-tuner/apply-balanced.sh       # core -75,  mem 0,  PL 500W
-./nvidia-tuner/apply-efficient.sh      # core -125, mem 0,  PL 475W
-./nvidia-tuner/apply-max-efficiency.sh # core -150, mem 0,  PL 450W
+# Undervolt profile helpers (increasing efficiency, all validated on this card)
+./nvidia-tuner/apply-balanced.sh       # core -75,  mem +2500, PL 500W
+./nvidia-tuner/apply-efficient.sh      # core -125, mem +2500, PL 450W
+./nvidia-tuner/apply-max-efficiency.sh # core -125, mem +3000, PL 400W
 ```
 
 ---
@@ -141,7 +141,7 @@ After=graphical.target
 [Service]
 Type=oneshot
 Environment=DISPLAY=:0
-ExecStart=/home/matt/development/Nvidia-Tuning-Toolkit/nvidia-settings/oc-memory.sh 2500
+ExecStart=/home/matt/development/nvidia-tuning-toolkit/nvidia-settings/oc-memory.sh 2500
 RemainAfterExit=yes
 
 [Install]
@@ -156,7 +156,7 @@ sudo systemctl enable --now rtx5090-oc.service
 
 ## Wayland-friendly method: nvidia-tuner
 
-If you prefer `nvidia-tuner` (works well on Wayland), this is the current default preset:
+If you prefer `nvidia-tuner` (works well on Wayland), this is the current daily-driver preset:
 
 ```bash
 nvidia-tuner --core-clock-offset -125 --memory-clock-offset 2500 --power-limit 500
@@ -210,14 +210,16 @@ sudo journalctl -u nvidia-tuner.service -n 50 --no-pager
 
 ### Undervolt profiles (Linux / `nvidia-tuner`)
 
-These profiles are conservative starting points for efficiency tuning. Test each
-profile for stability before moving to the next one.
+These profiles trade a deeper core undervolt and lower power limit for efficiency
+while keeping the memory overclock high. All values are validated on this card
+(RTX 5090 MSI Vanguard); test for stability on your own hardware before relying on
+them. Going down the table lowers the power limit and increases the memory offset.
 
 | Profile | Core offset | Memory offset | Power limit |
 |---------|-------------|---------------|-------------|
-| Balanced | `-75` | `0` | `500 W` |
-| Efficient | `-125` | `0` | `475 W` |
-| Max efficiency | `-150` | `0` | `450 W` |
+| Balanced | `-75` | `+2500` | `500 W` |
+| Efficient | `-125` | `+2500` | `450 W` |
+| Max efficiency | `-125` | `+3000` | `400 W` |
 
 Apply a profile:
 
@@ -227,15 +229,15 @@ Apply a profile:
 ./nvidia-tuner/apply-max-efficiency.sh
 ```
 
-After finding a stable profile, optionally add memory in small steps (`+250`,
-then `+500`) and re-test.
+If a profile is unstable on your card, lower the memory offset in `-250` steps
+and re-test.
 
 ---
 
 ## Files
 
 ```
-Nvidia-Tuning-Toolkit/
+nvidia-tuning-toolkit/
 ├── monitor.sh                  # Live GPU stats (1s refresh)
 ├── nvidia-settings/
 │   ├── install.sh              # One-shot setup (Coolbits + permissions)
@@ -245,10 +247,10 @@ Nvidia-Tuning-Toolkit/
 │   ├── oc-memory.sh            # Main script: apply memory transfer-rate offset
 │   └── oc-reset.sh             # Main script: reset offset to stock (0)
 └── nvidia-tuner/
-    ├── apply-default.sh        # Default preset (-125 core, +2500 memory, 500 W power)
-    ├── apply-balanced.sh       # Undervolt profile: -75 core, 0 mem, 500 W
-    ├── apply-efficient.sh      # Undervolt profile: -125 core, 0 mem, 475 W
-    └── apply-max-efficiency.sh # Undervolt profile: -150 core, 0 mem, 450 W
+    ├── apply-default.sh        # Stock clocks, max power (0 core, 0 mem, 600 W)
+    ├── apply-balanced.sh       # Undervolt profile: -75 core, +2500 mem, 500 W
+    ├── apply-efficient.sh      # Undervolt profile: -125 core, +2500 mem, 450 W
+    └── apply-max-efficiency.sh # Undervolt profile: -125 core, +3000 mem, 400 W
 ```
 
 ---
@@ -261,3 +263,4 @@ Nvidia-Tuning-Toolkit/
 | Screen goes black / GPU reset | Offset too high | Run `oc-reset.sh` from a TTY (`Ctrl+Alt+F2`) |
 | `nvidia-settings` not found | Package missing | `sudo apt install nvidia-settings` |
 | Offset applied but clock unchanged | Driver ignoring offset at idle | Run a GPU load first |
+| Coolbits installed but OC controls still missing | Wrong `BusID` in `10-coolbits.conf` | Run `lspci \| grep -i nvidia`, convert the address to `PCI:bus:device:function`, and update the `BusID` line (or omit it on single-GPU systems) |

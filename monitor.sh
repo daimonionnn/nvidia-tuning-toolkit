@@ -33,7 +33,7 @@ utilization.gpu,utilization.memory \
         printf "%-28s %s  /  %s\n", "VRAM Used:", $11, $12
         printf "%-28s %s\n",  "GPU Utilisation:", $13
         printf "%-28s %s\n",  "Mem Utilisation:", $14
-    }'
+    }' || echo "(GPU query failed — retrying)"
 
     echo ""
     echo "─── Error Counters ──────────────────────────────────────────"

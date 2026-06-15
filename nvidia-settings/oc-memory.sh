@@ -19,7 +19,7 @@ export DISPLAY
 # RTX 5090 GDDR7 stock: 14001 MHz   (28 Gbps effective)
 # Start low and increase by 100–200 MHz increments until artifacts appear,
 # then back off by 200 MHz for a stable daily-use offset.
-DEFAULT_OFFSET=2000
+DEFAULT_OFFSET=2500
 
 OFFSET=${DEFAULT_OFFSET}
 
@@ -111,7 +111,7 @@ if [[ ! "$OFFSET" =~ ^-?[0-9]+$ ]]; then
 fi
 
 if (( OFFSET > 4000 )); then
-    die "Offset $OFFSET MHz seems unreasonably high. Max recommended: 2000 MHz."
+    die "Offset $OFFSET MHz exceeds the 4000 MHz safety cap. Offsets above +3000 are extreme and likely unstable."
 fi
 
 ensure_gpu_visible
@@ -142,5 +142,5 @@ sleep 1
 # Show result
 nvidia-smi -i "$GPU_INDEX" --query-gpu=name,clocks.current.memory,clocks.max.memory --format=csv,noheader
 echo ""
-echo "Done. Monitor for stability with: ./scripts/monitor.sh"
-echo "To revert:                        ./scripts/oc-reset.sh"
+echo "Done. Monitor for stability with: ./monitor.sh"
+echo "To revert:                        ./nvidia-settings/oc-reset.sh"

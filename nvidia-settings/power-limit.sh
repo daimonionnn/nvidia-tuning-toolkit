@@ -120,4 +120,4 @@ else
 fi
 
 echo ""
-echo "Run './scripts/monitor.sh' to watch power draw live."
+echo "Run './monitor.sh' to watch power draw live."
