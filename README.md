@@ -8,32 +8,40 @@ Stock memory clock: **14001 MHz** (28 Gbps)
 
 ## Quick Start
 
+If `nvidia-smi` already works and the card is up, you can skip the driver bootstrap and start at step 2.
+
 ```bash
-# 1. Run the one-time setup (requires sudo for xorg config + display restart)
+# 1. Install the NVIDIA driver + CUDA toolkit first
+sudo bash install-driver.sh
+
+# 2. Run the one-time setup (requires sudo for xorg config + display restart)
 bash nvidia-settings/install.sh
 
-# 2. Set power limit (daily default: 500 W; stock: 575 W; max: 600 W)
+# 3. Set power limit (daily default: 500 W; stock: 575 W; max: 600 W)
 ./nvidia-settings/power-limit.sh 500       # 500 W — daily default profile
 ./nvidia-settings/power-limit.sh default   # 575 W — stock TDP
 ./nvidia-settings/power-limit.sh max       # 600 W — board maximum
 ./nvidia-settings/power-limit.sh status    # show current limits (no sudo)
 
-# 3. After your session restarts, apply a memory overclock (daily default: +2500)
+# 4. After your session restarts, apply a memory overclock (daily default: +2500)
 ./nvidia-settings/oc-memory.sh 2500   # daily default (RTX 5090 MSI Vanguard)
 ./nvidia-settings/oc-memory.sh 500    # conservative start
 ./nvidia-settings/oc-memory.sh 1000   # moderate
 ./nvidia-settings/oc-memory.sh 1500   # aggressive (test for stability first)
 ./nvidia-settings/oc-memory.sh 3000   # extreme (reported working on RTX 5090 MSI Vanguard)
 
-# 4. Monitor in real time
+# 5. Monitor in real time
 ./monitor.sh
 
-# 5. Revert to stock
+# 6. Revert to stock
 ./nvidia-settings/oc-reset.sh
 
 # Wayland-friendly method: nvidia-tuner presets
 nvidia-tuner --core-clock-offset -125 --memory-clock-offset 2500 --power-limit 500
 nvidia-tuner --memory-clock-offset 3000 --power-limit 500
+
+If Secure Boot is enabled, `install-driver.sh` will prompt for a MOK enrollment password and the key will be enrolled on the next reboot.
+If the driver is already installed and the GPU is working, `install-driver.sh` is optional unless you want the CUDA toolkit or need to refresh the Secure Boot enrollment path.
 
 # Or reset clocks to stock and unlock max power with the bundled helper
 ./nvidia-tuner/apply-default.sh        # core 0, mem 0, PL 600W
@@ -238,6 +246,7 @@ and re-test.
 
 ```
 nvidia-tuning-toolkit/
+├── install-driver.sh           # Driver + CUDA bootstrap (NVIDIA open driver + Secure Boot)
 ├── monitor.sh                  # Live GPU stats (1s refresh)
 ├── nvidia-settings/
 │   ├── install.sh              # One-shot setup (Coolbits + permissions)
