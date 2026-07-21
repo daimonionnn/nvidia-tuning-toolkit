@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# install-driver.sh — Bootstrap: install the NVIDIA driver + CUDA toolkit for an
-# RTX 50-series (Blackwell) GPU on Ubuntu, handling Secure Boot module signing.
+# install-driver.sh — Bootstrap: install the NVIDIA driver + CUDA toolkit for a
+# Blackwell GPU on Ubuntu, handling Secure Boot module signing. Covers both
+# consumer (RTX 50-series, e.g. RTX 5090) and professional (RTX PRO 6000
+# Blackwell) cards — both use the GB202 die.
 #
 # Run this FIRST, before nvidia-settings/install.sh. Requires sudo (apt + mokutil).
 #
 #   sudo bash install-driver.sh
 #
-# Blackwell (RTX 50xx, e.g. 5090 = GB202) REQUIRES the open kernel modules
+# Blackwell (RTX 50xx / RTX PRO 6000, GB202) REQUIRES the open kernel modules
 # (the "-open" driver flavour). The closed/proprietary modules do not support it.
 set -euo pipefail
 
@@ -22,7 +24,7 @@ if [[ $EUID -ne 0 ]]; then
     exec sudo -E bash "$0" "$@"
 fi
 
-echo "=== NVIDIA driver bootstrap (Blackwell / RTX 50-series) ==="
+echo "=== NVIDIA driver bootstrap (Blackwell: RTX 50-series / RTX PRO 6000) ==="
 echo ""
 
 # --- 1. Sanity checks -------------------------------------------------------
@@ -103,7 +105,7 @@ echo "       -> enter the one-time password you set above  ->  Reboot"
 echo "     (If you don't see this screen, the key was already enrolled — fine.)"
 echo "  3. After it boots, verify:   nvidia-smi   &&   nvcc --version"
 echo ""
-echo "Once nvidia-smi shows the RTX 5090, run the tuning setup:"
+echo "Once nvidia-smi shows your GPU, run the tuning setup:"
 echo "  bash nvidia-settings/install.sh"
 echo ""
 echo "=== Bootstrap complete ==="

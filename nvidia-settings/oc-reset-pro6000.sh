@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# oc-reset.sh — Reset RTX 5090 memory overclock to stock
+# oc-reset-pro6000.sh — Reset RTX PRO 6000 memory overclock to stock
 set -euo pipefail
 
 GPU_INDEX=${GPU_INDEX:-0}
@@ -25,7 +25,7 @@ if ! nvidia-settings -q all 2>&1 | grep -Fq 'GPUMemoryTransferRateOffsetAllPerfo
     die "Memory overclock controls are not exposed in this session. Log into an NVIDIA Xorg session with Coolbits enabled."
 fi
 
-echo "=== Resetting RTX 5090 memory overclock to stock ==="
+echo "=== Resetting RTX PRO 6000 memory overclock to stock ==="
 
 if ! OUTPUT=$(nvidia-settings -a "[gpu:${GPU_INDEX}]/GPUMemoryTransferRateOffsetAllPerformanceLevels=0" 2>&1); then
     echo "$OUTPUT" >&2

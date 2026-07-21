@@ -33,10 +33,19 @@ else
     echo "[2/4] Coolbits config installed to $COOLBITS_DEST"
 fi
 
-# 3. Unlock power limit to full TDP
+# 3. Unlock power limit to full TDP (read the board's own default rather than
+#    hardcoding a number, since this repo supports more than one GPU model)
 echo ""
-echo "[3/4] Setting GPU power limit to default TDP (575 W)..."
-sudo nvidia-smi -i 0 -pl 575 && echo "      Power limit set to 575 W." || echo "      WARNING: Could not set power limit — try manually: sudo nvidia-smi -pl 575"
+GPU_NAME=$(nvidia-smi -i 0 --query-gpu=name --format=csv,noheader 2>/dev/null || echo "unknown")
+DEFAULT_TDP=$(nvidia-smi -i 0 --query-gpu=power.default_limit --format=csv,noheader,nounits 2>/dev/null | xargs printf "%.0f" 2>/dev/null || echo "")
+echo "      Detected GPU: ${GPU_NAME}"
+if [[ -n "$DEFAULT_TDP" ]]; then
+    echo "[3/4] Setting GPU power limit to default TDP (${DEFAULT_TDP} W)..."
+    sudo nvidia-smi -i 0 -pl "$DEFAULT_TDP" && echo "      Power limit set to ${DEFAULT_TDP} W." || echo "      WARNING: Could not set power limit — try manually: sudo nvidia-smi -pl ${DEFAULT_TDP}"
+else
+    echo "[3/4] Could not read default power limit from nvidia-smi — skipping."
+    echo "      Set it manually, e.g.: sudo nvidia-smi -pl <watts>"
+fi
 
 # 4. Prompt to restart display manager
 echo ""
@@ -74,8 +83,25 @@ fi
 echo ""
 echo "=== Setup complete ==="
 echo ""
-echo "From repo root, you can now run:"
-echo "  ./nvidia-settings/power-limit.sh [default|max|<watts>|status]   # power limit"
-echo "  ./nvidia-settings/oc-memory.sh [offset_mhz]                     # memory OC"
-echo "  ./monitor.sh                                                     # live stats"
-echo "  ./nvidia-settings/oc-reset.sh                                    # revert OC to stock"
+
+# Suggest the right GPU-specific script suffix based on what nvidia-smi sees.
+SUFFIX=""
+case "${GPU_NAME^^}" in
+    *5090*)      SUFFIX="5090" ;;
+    *"PRO 6000"*) SUFFIX="pro6000" ;;
+esac
+
+if [[ -n "$SUFFIX" ]]; then
+    echo "Detected GPU maps to the '${SUFFIX}' scripts. From repo root, you can now run:"
+    echo "  ./nvidia-settings/power-limit-${SUFFIX}.sh [default|max|<watts>|status]   # power limit"
+    echo "  ./nvidia-settings/oc-memory-${SUFFIX}.sh [offset_mhz]                     # memory OC"
+    echo "  ./monitor.sh                                                              # live stats"
+    echo "  ./nvidia-settings/oc-reset-${SUFFIX}.sh                                   # revert OC to stock"
+else
+    echo "Could not map '${GPU_NAME}' to a known script set. This repo currently ships tuning"
+    echo "scripts for two cards, distinguished by filename suffix:"
+    echo "  ./nvidia-settings/power-limit-5090.sh     / ./nvidia-settings/power-limit-pro6000.sh"
+    echo "  ./nvidia-settings/oc-memory-5090.sh       / ./nvidia-settings/oc-memory-pro6000.sh"
+    echo "  ./nvidia-settings/oc-reset-5090.sh        / ./nvidia-settings/oc-reset-pro6000.sh"
+    echo "  ./monitor.sh                                                     # live stats (either card)"
+fi

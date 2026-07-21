@@ -1,0 +1,17 @@
+[Unit]
+Description=RTX PRO 6000 low-power tuning profile (see nvidia-tuner/apply-low-power-pro6000.sh for current values)
+After=multi-user.target
+Wants=multi-user.target
+
+[Service]
+Type=oneshot
+# nvidia-tuner lives in the installing user's ~/.local/bin by default (not
+# /usr/local/bin) — this service runs as root, whose default PATH doesn't
+# include that directory, so it's added explicitly. Update the path below if
+# your install location differs (check with `which nvidia-tuner`).
+Environment=PATH=/home/matt/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/matt/development/nvidia-tuning-toolkit/nvidia-tuner/apply-low-power-pro6000.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

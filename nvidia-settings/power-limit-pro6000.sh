@@ -1,31 +1,37 @@
 #!/usr/bin/env bash
-# power-limit.sh — RTX 5090 power limit manager
+# power-limit-pro6000.sh — RTX PRO 6000 Blackwell power limit manager
 # Requires sudo (nvidia-smi -pl writes to the driver).
 #
 # Usage:
-#   ./power-limit.sh [watts|default|max|min|status]
+#   ./power-limit-pro6000.sh [watts|default|max|min|status]
 #
-#   ./power-limit.sh status    # show current limits (no sudo needed)
-#   ./power-limit.sh default   # 575 W  — stock TDP
-#   ./power-limit.sh max       # 600 W  — maximum allowed
-#   ./power-limit.sh min       # 400 W  — current board minimum
-#   ./power-limit.sh 500       # 500 W  — custom value
-#   ./power-limit.sh 575       # same as "default"
+#   ./power-limit-pro6000.sh status    # show current limits (no sudo needed)
+#   ./power-limit-pro6000.sh default   # 600 W  — stock TGP (Workstation Edition)
+#   ./power-limit-pro6000.sh max       # 600 W  — board maximum
+#   ./power-limit-pro6000.sh min       # 150 W  — board minimum
+#   ./power-limit-pro6000.sh 500       # 500 W  — custom value
 #
-# Allowed range: 400 W – 600 W
+# Allowed range: 150 W – 600 W
+#
+# NOTE: these constants were confirmed via `nvidia-smi --query-gpu=power.min_limit,
+# power.max_limit,power.default_limit` on an actual Workstation Edition card
+# (150 / 600 / 600 W) — not estimated from spec sheets. If you have a Max-Q
+# (300 W hard cap) or Server edition (450–600 W depending on power cable),
+# run `status` first and adjust LIMIT_DEFAULT/LIMIT_MAX/LIMIT_MIN below to
+# match what nvidia-smi reports on your card.
 
 set -euo pipefail
 
 GPU_INDEX=${GPU_INDEX:-0}
 
-# ── Known limits (queried at install time) ────────────────────────────────────
-LIMIT_DEFAULT=575
+# ── Known limits (Workstation Edition; verify with `status` on your card) ─────
+LIMIT_DEFAULT=600
 LIMIT_MAX=600
-LIMIT_MIN=400
+LIMIT_MIN=150
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 print_status() {
-    echo "=== RTX 5090 Power Limits ==="
+    echo "=== RTX PRO 6000 Power Limits ==="
     nvidia-smi \
         --query-gpu=name,power.draw,power.limit,power.min_limit,power.max_limit,power.default_limit \
         --format=csv,noheader | \
@@ -43,7 +49,7 @@ usage() {
     echo "Usage: $0 [watts|default|max|min|status]"
     echo ""
     echo "  status          Show current power info (no sudo required)"
-    echo "  default         Set to default TDP (${LIMIT_DEFAULT} W)"
+    echo "  default         Set to default TGP (${LIMIT_DEFAULT} W)"
     echo "  max             Set to board maximum (${LIMIT_MAX} W)"
     echo "  min             Set to board minimum (${LIMIT_MIN} W)"
     echo "  <watts>         Set to a custom value between ${LIMIT_MIN} – ${LIMIT_MAX} W"
@@ -91,7 +97,7 @@ if (( TARGET < LIMIT_MIN || TARGET > LIMIT_MAX )); then
 fi
 
 # ── Apply ─────────────────────────────────────────────────────────────────────
-echo "=== RTX 5090 Power Limit ==="
+echo "=== RTX PRO 6000 Power Limit ==="
 echo ""
 
 BEFORE=$(nvidia-smi --query-gpu=power.limit --format=csv,noheader,nounits | xargs printf "%.0f")

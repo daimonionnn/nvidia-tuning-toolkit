@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# oc-memory.sh — RTX 5090 GDDR7 Memory Overclock
+# oc-memory-5090.sh — RTX 5090 GDDR7 Memory Overclock
 # Requires Coolbits=28 in xorg.conf.d and an active NVIDIA Xorg session.
 #
 # Usage:
-#   ./oc-memory.sh [offset_mhz] [gpu:N]
-#   ./oc-memory.sh 500            # +500 MHz transfer rate offset (conservative)
-#   ./oc-memory.sh 1000 gpu:0     # +1000 MHz on GPU 0
-#   ./oc-memory.sh gpu:1 1500     # +1500 MHz on GPU 1
-#   ./oc-memory.sh 0              # reset to stock
+#   ./oc-memory-5090.sh [offset_mhz] [gpu:N]
+#   ./oc-memory-5090.sh 500            # +500 MHz transfer rate offset (conservative)
+#   ./oc-memory-5090.sh 1000 gpu:0     # +1000 MHz on GPU 0
+#   ./oc-memory-5090.sh gpu:1 1500     # +1500 MHz on GPU 1
+#   ./oc-memory-5090.sh 0              # reset to stock
 
 set -euo pipefail
 
@@ -143,4 +143,4 @@ sleep 1
 nvidia-smi -i "$GPU_INDEX" --query-gpu=name,clocks.current.memory,clocks.max.memory --format=csv,noheader
 echo ""
 echo "Done. Monitor for stability with: ./monitor.sh"
-echo "To revert:                        ./nvidia-settings/oc-reset.sh"
+echo "To revert:                        ./nvidia-settings/oc-reset-5090.sh"

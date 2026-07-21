@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
-# monitor.sh — Live RTX 5090 GPU monitoring (1-second refresh)
+# monitor.sh — Live GPU monitoring (1-second refresh)
+# GPU-model-agnostic: works for RTX 5090, RTX PRO 6000, or whatever nvidia-smi
+# reports. See nvidia-settings/ and nvidia-tuner/ for model-specific tuning
+# scripts (distinguished by -5090 / -pro6000 filename suffix).
 # Press Ctrl+C to exit.
 
 set -euo pipefail
 
 INTERVAL=${1:-1}
+GPU_LABEL=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || echo "GPU")
 
-echo "=== RTX 5090 Live Monitor  (Ctrl+C to stop) ==="
+echo "=== ${GPU_LABEL} Live Monitor  (Ctrl+C to stop) ==="
 echo ""
 
 while true; do
     clear
-    echo "=== RTX 5090 Live Monitor  $(date '+%Y-%m-%d %H:%M:%S') ==="
+    echo "=== ${GPU_LABEL} Live Monitor  $(date '+%Y-%m-%d %H:%M:%S') ==="
     echo ""
     nvidia-smi --query-gpu=\
 name,driver_version,\
