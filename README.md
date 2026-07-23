@@ -41,7 +41,13 @@ bash nvidia-settings/install.sh
 ./nvidia-settings/oc-memory-pro6000.sh 250    # very conservative start
 ./nvidia-settings/oc-memory-pro6000.sh 500    # moderate — test thoroughly
 
-# 5. Monitor in real time (watch ECC error counters, not just temps)
+# ECC is disabled by default on this install — check or toggle it:
+./nvidia-settings/ecc-pro6000.sh status   # no sudo needed
+./nvidia-settings/ecc-pro6000.sh on       # pending — needs a reboot to apply
+./nvidia-settings/ecc-pro6000.sh off      # pending — needs a reboot to apply
+
+# 5. Monitor in real time (watch ECC error counters, not just temps —
+#    only meaningful while ECC is on)
 ./monitor.sh
 
 # 6. Revert to stock
@@ -56,7 +62,7 @@ nvidia-tuner --core-clock-offset -50 --memory-clock-offset 500 --power-limit 500
 # Undervolt profile helpers (UNVALIDATED starting points — see caveat below)
 ./nvidia-tuner/apply-balanced-pro6000.sh       # core -50, mem +500, PL 500W
 ./nvidia-tuner/apply-efficient-pro6000.sh      # core -75, mem +500, PL 450W
-./nvidia-tuner/apply-max-efficiency-pro6000.sh # core -75, mem +750, PL 400W
+./nvidia-tuner/apply-max-efficiency-pro6000.sh # core -75, mem +1000, PL 400W
 ./nvidia-tuner/apply-low-power-pro6000.sh      # core -50, mem +500, PL 300W
 ```
 
@@ -65,10 +71,14 @@ If the driver is already installed and the GPU is working, `install-driver.sh` i
 
 > **RTX PRO 6000 caveat:** none of the offsets/profiles above have been
 > validated on real hardware yet — they're conservative starting points, not
-> "reported working" numbers. This card also has **ECC memory**: an unstable
-> memory offset can silently corrupt compute results instead of just
-> crashing or showing visual artifacts, so validate with real workload output
-> (not just a stress test that ignores correctness) before trusting a profile.
+> "reported working" numbers. This card's memory is **ECC-capable, but ECC
+> is currently *disabled*** on this install (confirmed via
+> `nvidia-smi --query-gpu=ecc.mode.current,ecc.mode.pending`) — check with
+> `./nvidia-settings/ecc-pro6000.sh status` and toggle it with `on`/`off` if
+> you want it back. With ECC off there's no error counter and no correction
+> layer at all, so an unstable memory offset can silently corrupt compute
+> results with zero warning — validate with real workload output (not just a
+> crash-free stress test) before trusting a profile.
 > The power-limit constants (150–600 W) were confirmed via
 > `nvidia-smi --query-gpu=power.min_limit,power.max_limit,power.default_limit`
 > on an actual Workstation Edition card, so `apply-low-power-pro6000.sh`'s
@@ -176,11 +186,18 @@ differs is validated headroom and risk profile:
 | +750   | ~14751 MHz             | Unknown — untested                                                                 |
 | +1000+ | —                      | Blocked above +1500 by the script's safety cap until a stable point is established |
 
-This card has **ECC memory** and denser, clamshell-mounted modules (96 GB vs.
-32 GB), which typically means less OC headroom than a gaming card — and
-because it's ECC, an unstable offset risks silent data corruption in compute
-results rather than an obvious crash or visual artifact. Increase in small
-steps and validate against known-good workload output, not just uptime.
+This card has **ECC-capable memory** and denser, clamshell-mounted modules
+(96 GB vs. 32 GB), which typically means less OC headroom than a gaming
+card. ECC is currently **disabled** on this install (see
+`./nvidia-settings/ecc-pro6000.sh status`) — with it off there's neither an
+error counter nor a correction layer, so an unstable offset risks silent
+data corruption in compute results rather than an obvious crash or visual
+artifact. If you re-enable ECC (`ecc-pro6000.sh on`, then reboot), corrected
+single-bit errors get counted instead of silently landing in your data — see
+the [Stability Testing](#stability-testing) section below — but uncorrected
+multi-bit errors can still slip through unnoticed either way. Increase in
+small steps and validate against known-good workload output, not just
+uptime.
 
 > **Note:** GDDR7 uses PAM4 signalling. Small offsets can yield meaningfully
 > higher bandwidth. If you see visual artifacts, GPU resets, incorrect
@@ -238,6 +255,13 @@ ECC error counts climbing. **On the RTX PRO 6000**, a rising corrected-ECC
 count is a signal to back off the memory offset even if nothing has crashed —
 correction means the offset is already causing bit errors, just ones the
 memory can still fix.
+
+This only works while ECC is **enabled** — it's currently disabled on this
+install, so `monitor.sh` will just show `[N/A]` for both counters and give
+you no early warning at all. Turn it on for OC testing sessions with
+`./nvidia-settings/ecc-pro6000.sh on` (then reboot — the mode change is
+pending until the GPU resets), and back off with `off` afterward if you'd
+rather not keep the small VRAM/bandwidth overhead ECC carries day to day.
 
 ---
 
@@ -391,7 +415,7 @@ the cost of guessing wrong):
 | -------------- | ----------- | ------------- | ----------- |
 | Balanced       | `-50`       | `+500`        | `500 W`     |
 | Efficient      | `-75`       | `+500`        | `450 W`     |
-| Max efficiency | `-75`       | `+750`        | `400 W`     |
+| Max efficiency | `-75`       | `+1000`       | `400 W`     |
 | Low power      | `-50`       | `+500`        | `300 W`     |
 
 ```bash
@@ -421,7 +445,8 @@ nvidia-tuning-toolkit/
 │   ├── oc-memory-5090.sh                # RTX 5090: apply memory transfer-rate offset
 │   ├── oc-memory-pro6000.sh             # RTX PRO 6000: apply memory transfer-rate offset (conservative cap)
 │   ├── oc-reset-5090.sh                 # RTX 5090: reset offset to stock (0)
-│   └── oc-reset-pro6000.sh              # RTX PRO 6000: reset offset to stock (0)
+│   ├── oc-reset-pro6000.sh              # RTX PRO 6000: reset offset to stock (0)
+│   └── ecc-pro6000.sh                   # RTX PRO 6000: check/toggle ECC mode (pending until GPU reset)
 ├── nvidia-tuner/
 │   ├── apply-default-5090.sh            # RTX 5090: stock clocks, max power (0 core, 0 mem, 600 W)
 │   ├── apply-default-pro6000.sh         # RTX PRO 6000: stock clocks, max power (0 core, 0 mem, 600 W)
@@ -430,7 +455,7 @@ nvidia-tuning-toolkit/
 │   ├── apply-efficient-5090.sh          # RTX 5090: -125 core, +2500 mem, 450 W (validated)
 │   ├── apply-efficient-pro6000.sh       # RTX PRO 6000: -75 core, +500 mem, 450 W (unvalidated)
 │   ├── apply-max-efficiency-5090.sh     # RTX 5090: -125 core, +3000 mem, 400 W (validated)
-│   ├── apply-max-efficiency-pro6000.sh  # RTX PRO 6000: -75 core, +750 mem, 400 W (unvalidated)
+│   ├── apply-max-efficiency-pro6000.sh  # RTX PRO 6000: -75 core, +1000 mem, 400 W (unvalidated)
 │   └── apply-low-power-pro6000.sh       # RTX PRO 6000: -50 core, +500 mem, 300 W (unvalidated clock offsets; wattage confirmed in-range)
 └── systemd/
     └── nvidia-tuner-low-power-pro6000.service  # Boot unit: runs apply-low-power-pro6000.sh at startup (see "Make preset persistent")
